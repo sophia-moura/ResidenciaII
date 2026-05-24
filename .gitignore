@@ -1,0 +1,13 @@
+# Ignorar o ambiente virtual
+.venv/
+venv/
+ENV/
+
+# Ignorar arquivos de dados locais (Excel, CSV, etc.)
+*.xlsx
+*.xls
+*.csv
+
+# Ignorar arquivos temporários do Python
+__pycache__/
+*.pyc
