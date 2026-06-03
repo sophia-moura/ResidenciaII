@@ -97,6 +97,10 @@ st.markdown("""
             background-color: #FAFCFF !important;
             font-size: 13.5px !important;
         }
+        div[data-testid="stSelectbox"] input {
+            pointer-events: none !important;
+            caret-color: transparent !important; /* Esconde a barrinha de digitação piscando */
+        }
 
         .detail-card {
             background: #FFFFFF;
@@ -150,6 +154,11 @@ def carregar_dados():
     df = pd.read_csv('data/atendimentos.csv', encoding='latin1', sep=';')
     df['Abertura']   = pd.to_datetime(df['Abertura'],   dayfirst=True, errors='coerce')
     df['Fechamento'] = pd.to_datetime(df['Fechamento'], dayfirst=True, errors='coerce')
+    df['Prazo limite final'] = pd.to_datetime(df['Prazo limite final'], dayfirst=True, errors='coerce')
+    
+    colunas_para_tratar = df.columns.difference(['Abertura', 'Fechamento', 'Prazo limite final'])
+    # 3. Aplica o fillna('N/A') apenas no resultado dessa exclusão
+    df[colunas_para_tratar] = df[colunas_para_tratar].fillna('N/A')
     return df
 
 df = carregar_dados()
@@ -170,9 +179,21 @@ cores_status = {
     'Concluído confirmado':  '#1A7055',
     'Concluído a responder': '#513DA0',
     'Cancelado':             '#52637E',
+    'Limite de prazo - 30 dias':         '#D32F2F',  # cor de alerta para prazos próximos ou vencidos
 }
 
-def cor_evento(status):
+def cor_evento(status, row):
+    if status in ['Concluído confirmado', 'Concluído a responder', 'Cancelado']:
+        return cores_status.get(status, '#0A4FD4')
+        
+    if status == 'Em andamento' and pd.notna(row['Prazo limite final']):
+        hoje = pd.Timestamp.now().normalize() # Pega o dia de hoje
+        dias_restantes = (row['Prazo limite final'] - hoje).days
+        
+        # Se faltar menos de 30 dias (ou se já estiver vencido), força a cor VERMELHA
+        if dias_restantes < 30:
+            return '#D32F2F' 
+            
     return cores_status.get(status, '#0A4FD4')
 
 
@@ -249,7 +270,7 @@ for _, row in df_valido.iterrows():
 
     events.append({
         'title': f"{row['Atendimento']} | {row['Assunto']}",
-        'color': cor_evento(row['Status']),
+        'color': cor_evento(row['Status'], row),
         'start': inicio,
         'end':   fim,
         'extendedProps': {
@@ -260,6 +281,13 @@ for _, row in df_valido.iterrows():
             'tipo':       str(row['TIPO_ABERTURA']),
             'abertura':   row['Abertura'].strftime('%d/%m/%Y %H:%M'),
             'fechamento': row['Fechamento'].strftime('%d/%m/%Y %H:%M') if pd.notna(row['Fechamento']) else 'Em aberto',
+            'etapa_atual': str(row['Etapa atual']),
+            'tipo_curso': str(row['TIPOCURSO']),
+            'curso':      str(row['CURSO']),
+            'cliente':    str(row['Cliente']),
+            'codigo_cliente': str(row['Código do Cliente']),
+            'tipo_cliente': str(row['Tipo cliente']),
+            'Classificação': str(row['Classificação']),
         }
     })
 
@@ -274,6 +302,7 @@ base = {
     'navLinks':    'true',
     'selectable':  'true',
     'locale':      'pt-br',
+    'displayEventTime': True,
     'buttonText': {
         'today':         'Hoje',
         'dayGridMonth':  'Mês',
@@ -299,12 +328,20 @@ if mode == 'daygrid':
             'center': 'title',
             'right':  'dayGridDay,dayGridWeek,dayGridMonth',
         },
+        'views': {
+            'dayGridDay':  { 
+                'dayMaxEvents': 'none', 
+            },
+            'dayGridWeek':  { 
+                'dayMaxEvents': 10,
+            },
+        }
     }
 elif mode == 'timegrid':
     calendar_options = {
         **base,
         'initialView':   'timeGridWeek',
-        'eventMaxStack': 10,   # semanal/diário: mostra até 10 por coluna de hora
+        'eventMaxStack': 5,     # semanal/diário: mostra até 5 por coluna de hora
         'headerToolbar': {
             'left':  'title',
             'right': 'today prev,next timeGridDay,timeGridWeek',
@@ -410,8 +447,17 @@ state = calendar(
     }
 
     /* Células dos dias */
+    .fc-col-header-cell-cushion {
+        text-transform: uppercase;
+    }
+
+
     .fc-daygrid-day {
         border-color: #E8EEF8 !important;
+    }
+    .fc-daygrid-day-top {
+        display: flex;
+        justify-content: center;
     }
     .fc-daygrid-day-number {
         color: #2C3E6B !important;
@@ -468,12 +514,56 @@ state = calendar(
 # -------------------------------------------------------
 # DETALHES AO CLICAR
 # -------------------------------------------------------
+
+# 1. Primeiro, criamos a janela suspensa
+@st.dialog("Detalhes do Atendimento")
+def popup_detalhes(evento_dados):
+
+    # Visual interno
+    st.subheader(f"📌 {evento_dados.get('title', 'Sem Título')}")
+    st.write(f"📅 **Abertura:** {evento_dados.get('abertura')}")
+    st.write(f"🏁 **Fechamento:** {evento_dados.get('fechamento')}")
+    st.write(f"🏢 **Campus:** {evento_dados.get('campus')}")
+    st.write(f"👤 **Responsável:** {evento_dados.get('atendente')}")
+    st.write(f"💼 **Status:** {evento_dados.get('status')}")
+    st.write(f"📊 **Etapa Atual:** {evento_dados.get('etapa_atual')}")
+    st.write(f"🎓 **Tipo de Curso:** {evento_dados.get('tipo_curso')}")
+    st.write(f"👤 **Cliente:** {evento_dados.get('cliente')}")
+    st.write(f"🔢 **Código do Cliente:** {evento_dados.get('codigo_cliente')}")
+    st.write(f"👥 **Tipo de Cliente:** {evento_dados.get('tipo_cliente')}")
+    st.write(f"⭐ **Classificação:** {evento_dados.get('Classificação')}")
+
+
+# 2. O Bloco de Clique Único que dispara as DUAS funções
 if state.get('eventClick'):
-    ext      = state['eventClick']['event'].get('extendedProps', {})
+    evento_completo = state['eventClick']['event']
+    ext = evento_completo.get('extendedProps', {})
     data_dia = ext.get('data_dia')
 
     if data_dia:
-        df_dia         = df_valido[df_valido['data_abertura'] == data_dia].copy()
+        # 1° Função: Criação do dicionário de dados para a janela flutuante
+        dados_para_janela = {
+            'title':     evento_completo.get('title'),
+            'abertura':   ext.get('abertura'),
+            'fechamento': ext.get('fechamento'),
+            'campus':    ext.get('campus'),
+            'atendente': ext.get('atendente'),
+            'status':    ext.get('status'),
+
+            'etapa_atual': ext.get('etapa_atual'),
+            'tipo_curso': ext.get('tipo_curso'),
+            'curso': ext.get('curso'),
+            'cliente': ext.get('cliente'),
+            'codigo_cliente': ext.get('codigo_cliente'),
+            'tipo_cliente': ext.get('tipo_cliente'),
+            'Classificação': ext.get('Classificação'),
+        }
+        # Abrimos a janela flutuante
+        popup_detalhes(dados_para_janela)
+
+
+        # 2° Função: Filtragem dos dados para exibir a tabela detalhada
+        df_dia = df_valido[df_valido['data_abertura'] == data_dia].copy()
         data_formatada = pd.to_datetime(data_dia).strftime('%d/%m/%Y')
 
         st.markdown(f"""
