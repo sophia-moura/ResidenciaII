@@ -52,4 +52,12 @@ col1, col2, col3 = st.columns([1,2,1], vertical_alignment="center")
 with col2:
     st.image('assets/logo.png', width=400)
     st.markdown("<p class='titulo-universidade'>Universidade Catolica de Brasília</p>", unsafe_allow_html=True)
+    
+
+colum1, colum2 = st.columns([2,1], vertical_alignment="center")
+with colum1:
     st.page_link("pages/calendario.py", label="Entrar no Portal - Atende")
+
+
+with colum2:
+    st.page_link("pages/upload.py", label="Upload de Solicitações")
