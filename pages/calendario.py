@@ -1,32 +1,141 @@
 import pandas as pd
 import streamlit as st
-<<<<<<< Updated upstream
-
-=======
 import sqlite3
->>>>>>> Stashed changes
 from streamlit_calendar import calendar
 from datetime import datetime
-st.set_page_config(page_title='Calendário Solicitações',
-                   page_icon=':calendar:',
-                   layout='centered')
 
-# Estilos personalizados para o calendário
+st.set_page_config(
+    page_title='Calendário Solicitações',
+    page_icon=':calendar:',
+    layout='wide'
+)
+
+# -------------------------------------------------------
+# ESTILOS GLOBAIS
+# -------------------------------------------------------
 st.markdown("""
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .stApp { background-color: #F2F5FB; }
+
+        .page-header {
+            background: linear-gradient(135deg, #011E6B 0%, #0A4FD4 100%);
+            border-radius: 14px;
+            padding: 22px 30px;
+            margin-bottom: 18px;
+            box-shadow: 0 4px 18px rgba(1,30,107,0.18);
+        }
+        .page-header h1 {
+            color: #FFFFFF;
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 0 3px 0;
+            font-family: Arial, sans-serif;
+            letter-spacing: 0.2px;
+        }
+        .page-header p {
+            color: #A8C8F8;
+            font-size: 12px;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .filter-card {
+            background: #FFFFFF;
+            border-radius: 12px;
+            padding: 18px 22px 14px 22px;
+            margin-bottom: 14px;
+            border: 1px solid #DDE6F5;
+            box-shadow: 0 2px 8px rgba(2,42,137,0.05);
+        }
+
+        .section-label {
+            font-size: 10.5px;
+            font-weight: 700;
+            color: #8494B4;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .legend-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+        .legend-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 12.5px;
+            font-weight: 500;
+            color: #1E2D52;
+            background: #F5F8FF;
+            border-radius: 999px;
+            padding: 5px 13px 5px 9px;
+            border: 1.5px solid #DDE6F5;
+            white-space: nowrap;
+        }
+        .legend-dot {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+        }
+
+        div[data-testid="stSelectbox"] label {
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            color: #5A6E96 !important;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+        }
+        div[data-testid="stSelectbox"] > div > div {
+            border-radius: 9px !important;
+            border: 1.5px solid #C8D8EE !important;
+            background-color: #FAFCFF !important;
+            font-size: 13.5px !important;
+        }
+        div[data-testid="stSelectbox"] input {
+            pointer-events: none !important;
+            caret-color: transparent !important; /* Esconde a barrinha de digitação piscando */
+        }
+
+        .detail-card {
+            background: #FFFFFF;
+            border-radius: 12px;
+            border: 1px solid #DDE6F5;
+            box-shadow: 0 2px 10px rgba(2,42,137,0.07);
+            overflow: hidden;
+            margin-top: 18px;
+        }
+        .detail-card-header {
+            background: linear-gradient(135deg, #011E6B 0%, #0A4FD4 100%);
+            padding: 15px 22px;
+            color: #FFFFFF;
+            font-size: 15px;
+            font-weight: 600;
+            font-family: Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .detail-card-header .badge {
+            background: rgba(255,255,255,0.2);
+            border-radius: 999px;
+            padding: 2px 11px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .detail-card-body { padding: 6px; }
+
+        div[data-testid="stDataFrame"] { border-radius: 0 !important; }
+    </style>
 """, unsafe_allow_html=True)
 
 
-<<<<<<< Updated upstream
-# Mapeamento dos modos para os valores esperados pelo calendário
-modos_traduzidos = {
-    "Visão Geral": "daygrid",
-    "Visão por Horário ": "timegrid",
-    "Linha do Tempo": "timeline",
-    "Lista de Demandas": "list",
-    "Múltiplos Meses": "multimonth",
-=======
 # -------------------------------------------------------
 # CABEÇALHO
 # -------------------------------------------------------
@@ -39,11 +148,11 @@ st.markdown("""
 
 col_nav1, col_nav2, _ = st.columns([1, 1, 4])
 with col_nav1:
-    if st.button("👁️ Calendário Acadêmico", use_container_width=True):
+    if st.button("👁️ Ver Calendário Acadêmico", use_container_width=True):
         st.switch_page("pages/visualizar.py")
 
 with col_nav2:
-    if st.button("📂 Upload de Arquivos ", use_container_width=True):
+    if st.button("📂 Upload de Arquivos", use_container_width=True):
         st.switch_page("pages/upload.py")
 
 # -------------------------------------------------------
@@ -82,269 +191,412 @@ cores_status = {
     'Concluído a responder': '#513DA0',
     'Cancelado':             '#52637E',
     'Limite de prazo - 30 dias':         '#D32F2F',  # cor de alerta para prazos próximos ou vencidos
->>>>>>> Stashed changes
 }
-modo_selecionado = st.selectbox(
-    "Selecione o modo do calendário:",
-    options=list(modos_traduzidos.keys()),
-)
+
+def cor_evento(status, row):
+    if status in ['Concluído confirmado', 'Concluído a responder', 'Cancelado']:
+        return cores_status.get(status, '#0A4FD4')
+        
+    if status == 'Em andamento' and pd.notna(row['Prazo limite final']):
+        hoje = pd.Timestamp.now().normalize() # Pega o dia de hoje
+        dias_restantes = (row['Prazo limite final'] - hoje).days
+        
+        # Se faltar menos de 30 dias (ou se já estiver vencido), força a cor VERMELHA
+        if dias_restantes < 30:
+            return '#D32F2F' 
+            
+    return cores_status.get(status, '#0A4FD4')
+
+
+# -------------------------------------------------------
+# FILTROS + LEGENDA
+# -------------------------------------------------------
+st.markdown('<div class="filter-card">', unsafe_allow_html=True)
+col_tipo, col_modo, col_leg = st.columns([1, 1, 2])
+
+with col_tipo:
+    tipos = ['Todos'] + sorted(df['TIPO_ABERTURA'].dropna().unique().tolist())
+    tipo_selecionado = st.selectbox('Tipo de Atendimento', tipos)
+
+with col_modo:
+    modos_traduzidos = {
+        'Visão Mensal':      'daygrid',
+        'Visão Semanal':     'timegrid',
+        'Linha do Tempo':    'timeline',
+        'Lista de Demandas': 'list',
+        'Múltiplos Meses':   'multimonth',
+    }
+    modo_selecionado = st.selectbox('Modo de Visualização', list(modos_traduzidos.keys()))
+
+with col_leg:
+    st.markdown('<div class="section-label">Legenda de Status</div>', unsafe_allow_html=True)
+    pills = ''.join([
+        f'<span class="legend-pill">'
+        f'<span class="legend-dot" style="background:{cor}"></span>{label}'
+        f'</span>'
+        for label, cor in cores_status.items()
+    ])
+    st.markdown(f'<div class="legend-wrap">{pills}</div>', unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True)
+
 mode = modos_traduzidos[modo_selecionado]
 
-# Eventos de exemplo
-events = [
-    {
-        "title": "Event 1",
-        "color": "#FF6C6C",
-        "start": "2026-07-03",
-        "end": "2026-07-05",
-        "resourceId": "a",
-    },
-    {
-        "title": "Event 2",
-        "color": "#FFBD45",
-        "start": "2026-07-01",
-        "end": "2026-07-10",
-        "resourceId": "b",
-    },
-    {
-        "title": "Event 3",
-        "color": "#FF4B4B",
-        "start": "2026-07-20",
-        "end": "2026-07-20",
-        "resourceId": "c",
-    },
-    {
-        "title": "Event 4",
-        "color": "#FF6C6C",
-        "start": "2026-07-23",
-        "end": "2026-07-25",
-        "resourceId": "d",
-    },
-    {
-        "title": "Event 5",
-        "color": "#FFBD45",
-        "start": "2026-07-29",
-        "end": "2026-07-30",
-        "resourceId": "e",
-    },
-    {
-        "title": "Event 6",
-        "color": "#FF4B4B",
-        "start": "2026-07-28",
-        "end": "2026-07-20",
-        "resourceId": "f",
-    },
-    {
-        "title": "Event 7",
-        "color": "#FF4B4B",
-        "start": "2026-07-01T08:30:00",
-        "end": "2026-07-01T10:30:00",
-        "resourceId": "a",
-    },
-    {
-        "title": "Event 8",
-        "color": "#3D9DF3",
-        "start": "2026-07-01T07:30:00",
-        "end": "2026-07-01T10:30:00",
-        "resourceId": "b",
-    },
-    {
-        "title": "Event 9",
-        "color": "#3DD56D",
-        "start": "2026-07-02T10:40:00",
-        "end": "2026-07-02T12:30:00",
-        "resourceId": "c",
-    },
-    {
-        "title": "Event 10",
-        "color": "#FF4B4B",
-        "start": "2026-07-15T08:30:00",
-        "end": "2026-07-15T10:30:00",
-        "resourceId": "d",
-    },
-    {
-        "title": "Event 11",
-        "color": "#3DD56D",
-        "start": "2026-07-15T07:30:00",
-        "end": "2026-07-15T10:30:00",
-        "resourceId": "e",
-    },
-    {
-        "title": "Event 12",
-        "color": "#3D9DF3",
-        "start": "2026-07-21T10:40:00",
-        "end": "2026-07-21T12:30:00",
-        "resourceId": "f",
-    },
-    {
-        "title": "Event 13",
-        "color": "#FF4B4B",
-        "start": "2026-07-17T08:30:00",
-        "end": "2026-07-17T10:30:00",
-        "resourceId": "a",
-    },
-    {
-        "title": "Event 14",
-        "color": "#3D9DF3",
-        "start": "2026-07-17T09:30:00",
-        "end": "2026-07-17T11:30:00",
-        "resourceId": "b",
-    },
-    {
-        "title": "Event 15",
-        "color": "#3DD56D",
-        "start": "2026-07-17T10:30:00",
-        "end": "2026-07-17T12:30:00",
-        "resourceId": "c",
-    },
-    {
-        "title": "Event 16",
-        "color": "#FF6C6C",
-        "start": "2026-07-17T13:30:00",
-        "end": "2026-07-17T14:30:00",
-        "resourceId": "d",
-    },
-    {
-        "title": "Event 17",
-        "color": "#FFBD45",
-        "start": "2026-07-17T15:30:00",
-        "end": "2026-07-17T16:30:00",
-        "resourceId": "e",
-    },
-]
 
-# Configurações comuns para o calendário
-calendar_options = {
-    "themeSystem": "bootstrap5",
-    "editable": "true",
-    "navLinks": "true",
-    "selectable": "true",
+# -------------------------------------------------------
+# FILTRO + PREPARAÇÃO DOS DADOS
+# -------------------------------------------------------
+df_filtrado = df.copy()
+if tipo_selecionado != 'Todos':
+    df_filtrado = df_filtrado[df_filtrado['TIPO_ABERTURA'] == tipo_selecionado]
+
+df_valido = df_filtrado.dropna(subset=['Abertura']).copy()
+df_valido['data_abertura'] = df_valido['Abertura'].dt.strftime('%Y-%m-%d')
+
+
+# -------------------------------------------------------
+# GERAÇÃO DE EVENTOS
+# - daygrid / multimonth  → data só (sem hora) → blocos de dia inteiro
+# - timegrid / timeline   → com horário        → exibição por hora
+# - list                  → com horário        → listagem precisa
+# -------------------------------------------------------
+events = []
+usar_hora = mode in ('timegrid', 'timeline', 'list')
+
+for _, row in df_valido.iterrows():
+    if usar_hora:
+        inicio = row['Abertura'].strftime('%Y-%m-%dT%H:%M:%S')
+        fim    = (
+            row['Fechamento'].strftime('%Y-%m-%dT%H:%M:%S')
+            if pd.notna(row['Fechamento'])
+            else (row['Abertura'] + pd.Timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M:%S')
+        )
+    else:
+        inicio = row['Abertura'].strftime('%Y-%m-%d')
+        fim    = (
+            (row['Fechamento'] + pd.Timedelta(days=1)).strftime('%Y-%m-%d')
+            if pd.notna(row['Fechamento'])
+            else (row['Abertura'] + pd.Timedelta(days=1)).strftime('%Y-%m-%d')
+        )
+
+    events.append({
+        'title': f"{row['Atendimento']} | {row['Assunto']}",
+        'color': cor_evento(row['Status'], row),
+        'start': inicio,
+        'end':   fim,
+        'extendedProps': {
+            'data_dia':   row['data_abertura'],
+            'status':     str(row['Status']),
+            'campus':     str(row['CAMPUS']),
+            'atendente':  str(row['Atendente responsável']),
+            'tipo':       str(row['TIPO_ABERTURA']),
+            'abertura':   row['Abertura'].strftime('%d/%m/%Y %H:%M'),
+            'fechamento': row['Fechamento'].strftime('%d/%m/%Y %H:%M') if pd.notna(row['Fechamento']) else 'Em aberto',
+            'etapa_atual': str(row['Etapa atual']),
+            'tipo_curso': str(row['TIPOCURSO']),
+            'curso':      str(row['CURSO']),
+            'cliente':    str(row['Cliente']),
+            'codigo_cliente': str(row['Código do Cliente']),
+            'tipo_cliente': str(row['Tipo cliente']),
+            'Classificação': str(row['Classificação']),
+        }
+    })
+
+
+# -------------------------------------------------------
+# OPÇÕES DO CALENDÁRIO
+# -------------------------------------------------------
+data_hoje = datetime.now().strftime('%Y-%m-%d')
+
+base = {
+    'themeSystem': 'bootstrap5',
+    'navLinks':    'true',
+    'selectable':  'true',
+    'locale':      'pt-br',
+    'displayEventTime': True,
+    'buttonText': {
+        'today':         'Hoje',
+        'dayGridMonth':  'Mês',
+        'dayGridWeek':   'Semana',
+        'dayGridDay':    'Dia',
+        'timeGridWeek':  'Semana',
+        'timeGridDay':   'Dia',
+        'timelineMonth': 'Mês',
+        'timelineWeek':  'Semana',
+        'timelineDay':   'Dia',
+        'list':          'Lista',
+    },
+    'initialDate': data_hoje,
 }
 
-
-# Configurações específicas para cada modo
-if mode == "daygrid":
-    data_atual_formatada = datetime.now().strftime("%Y-%m-%d")
+if mode == 'daygrid':
     calendar_options = {
-        **calendar_options,
-        "headerToolbar": {
-            "left": "today prev,next",
-            "center": "title",
-            "right": "dayGridDay,dayGridWeek,dayGridMonth",
+        **base,
+        'initialView':  'dayGridMonth',
+        'dayMaxEvents': 2,
+        'headerToolbar': {
+            'left':   'today prev,next',
+            'center': 'title',
+            'right':  'dayGridDay,dayGridWeek,dayGridMonth',
         },
-        "titleFormat": {
-            "year": "numeric",
-            "month": "long",
-            "day": "numeric"
-        },
-        "buttonText": {
-            "today":    'Hoje',
-            "dayGridMonth":    'Mês',
-            "dayGridWeek":     'Semana',
-            "dayGridDay":      'Dia',
-            "list":     'Lista'
-        },
-        "initialDate": data_atual_formatada,
-        "initialView": "dayGridMonth",
+        'views': {
+            'dayGridDay':  { 
+                'dayMaxEvents': 'none', 
+            },
+            'dayGridWeek':  { 
+                'dayMaxEvents': 10,
+            },
+        }
     }
-elif mode == "timegrid":
+elif mode == 'timegrid':
     calendar_options = {
-        **calendar_options,
-        "headerToolbar": {
-            "left": "title",
-            "right": "today prev,next timeGridDay,timeGridWeek",
+        **base,
+        'initialView':   'timeGridWeek',
+        'eventMaxStack': 5,     # semanal/diário: mostra até 5 por coluna de hora
+        'headerToolbar': {
+            'left':  'title',
+            'right': 'today prev,next timeGridDay,timeGridWeek',
         },
-        "titleFormat": {
-            "year": "numeric",
-            "month": "long",
-            "day": "numeric"
-        },
-        "buttonText": {
-            "today":    'Hoje',
-            "timeGridWeek":     'Semana',
-            "timeGridDay":      'Dia',
-            "list":     'lista'
-        },
-        "initialView": "timeGridWeek",
     }
-elif mode == "timeline":
-    data_atual_formatada = datetime.now().strftime("%Y-%m-%d")
+elif mode == 'timeline':
     calendar_options = {
-        **calendar_options,
-        "headerToolbar": {
-            "left": "today prev,next",
-            "center": "title",
-            "right": "timelineDay,timelineWeek,timelineMonth",
+        **base,
+        'initialView': 'timelineMonth',
+        'headerToolbar': {
+            'left':   'today prev,next',
+            'center': 'title',
+            'right':  'timelineDay,timelineWeek,timelineMonth',
         },
-        "titleFormat": {
-            "year": "numeric",
-            "month": "long",
-            "day": "numeric"
-        },
-        "buttonText": {
-            "today":    'Hoje',
-            "timelineMonth":    'Mês',
-            "timelineWeek":     'Semana',
-            "timelineDay":      'Dia',
-            "list":     'lista'
-        },
-        "initialDate": data_atual_formatada,
-        "initialView": "timelineMonth",
     }
-elif mode == "list":
-    data_atual_formatada = datetime.now().strftime("%Y-%m-%d")
+elif mode == 'list':
     calendar_options = {
-        **calendar_options,
-        "buttonText": {
-            "today":    'Hoje',
+        **base,
+        'initialView': 'listMonth',
+        'headerToolbar': {
+            'left':   'today prev,next',
+            'center': 'title',
+            'right':  '',
         },
-        "initialDate": data_atual_formatada,
-        "initialView": "listMonth",
     }
-elif mode == "multimonth":
+elif mode == 'multimonth':
     calendar_options = {
-        **calendar_options,
-        "initialView": "multiMonthYear",
+        **base,
+        'initialView':  'multiMonthYear',
+        'dayMaxEvents': 2,
     }
 
-# Renderiza o calendário com as opções e eventos configurados
+
+# -------------------------------------------------------
+# RENDERIZAÇÃO DO CALENDÁRIO
+# -------------------------------------------------------
 state = calendar(
-    events=st.session_state.get("events", events),
+    events=events,
     options=calendar_options,
     custom_css="""
+    /* Fundo e borda */
+    .fc {
+        background: #FFFFFF;
+        border-radius: 14px;
+        padding: 16px;
+        box-shadow: 0 2px 12px rgba(2,42,137,0.07);
+    }
 
-    /* Estilos personalizados para os eventos */
-    .fc-event-past {
-        opacity: 0.8;
+    /* Eventos */
+    .fc-event {
+        border-radius: 6px !important;
+        border: none !important;
+        font-size: 11.5px !important;
+        padding: 1px 5px !important;
     }
-    .fc-event-time {
-        font-style: italic;
+    .fc-event-past  { opacity: 0.70; }
+    .fc-event-time  { font-style: normal; font-size: 10.5px; opacity: 0.80; }
+    .fc-event-title { font-weight: 600; }
+
+    /* Botões */
+    .fc-button-primary {
+        background-color: #022A89 !important;
+        border-color: #022A89 !important;
+        color: #FFFFFF !important;
+        border-radius: 8px !important;
+        font-size: 12.5px !important;
+        font-weight: 600 !important;
+        padding: 5px 15px !important;
+        letter-spacing: 0.2px;
+        box-shadow: 0 2px 6px rgba(2,42,137,0.2) !important;
     }
-    .fc-event-title {
+    .fc-button-primary:hover {
+        background-color: #011C5C !important;
+        border-color: #011C5C !important;
+    }
+    .fc-button-primary:not(:disabled).fc-button-active {
+        background-color: #FFCC00 !important;
+        border-color: #FFCC00 !important;
+        color: #022A89 !important;
+        box-shadow: none !important;
+    }
+
+    /* Título */
+    .fc-toolbar-title {
+        font-size: 1.35rem !important;
+        color: #011E6B !important;
+        font-family: Arial, sans-serif;
+        font-weight: 700;
+        letter-spacing: -0.3px;
+    }
+
+    /* Cabeçalho dos dias */
+    .fc-col-header-cell {
+        background-color: #F0F4FA !important;
+        border-color: #DDE6F5 !important;
+    }
+    .fc-col-header-cell-cushion {
+        color: #022A89 !important;
+        font-weight: 700;
+        font-size: 12.5px;
+        text-decoration: none !important;
+        padding: 8px 4px !important;
+    }
+
+    /* Células dos dias */
+    .fc-col-header-cell-cushion {
+        text-transform: uppercase;
+    }
+
+
+    .fc-daygrid-day {
+        border-color: #E8EEF8 !important;
+    }
+    .fc-daygrid-day-top {
+        display: flex;
+        justify-content: center;
+    }
+    .fc-daygrid-day-number {
+        color: #2C3E6B !important;
+        font-weight: 600;
+        font-size: 13px;
+        text-decoration: none !important;
+    }
+    .fc-day-today {
+        background-color: #EBF0FF !important;
+    }
+    .fc-day-today .fc-daygrid-day-number {
+        background: #022A89;
+        color: #FFFFFF !important;
+        border-radius: 50%;
+        width: 26px;
+        height: 26px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Link "+X mais" */
+    .fc-daygrid-more-link {
+        background: #EBF0FF !important;
+        color: #022A89 !important;
+        font-weight: 700;
+        font-size: 11px;
+        border-radius: 4px;
+        padding: 1px 5px !important;
+    }
+
+    /* Timegrid linhas de hora */
+    .fc-timegrid-slot {
+        border-color: #EEF2FA !important;
+        height: 36px !important;
+    }
+    .fc-timegrid-slot-label {
+        font-size: 11px;
+        color: #7A8FAF !important;
+    }
+
+    /* Lista */
+    .fc-list-event:hover td { background: #F0F4FF !important; }
+    .fc-list-day-cushion { background: #F0F4FA !important; }
+    .fc-list-day-text, .fc-list-day-side-text {
+        color: #022A89 !important;
         font-weight: 700;
     }
-    
-        /* Estilos personalizados para os botões e título do calendário */
-        .fc-button-primary {
-            background-color: #022A89 !important; /* Força o azul UCB nos botões */
-            border-color: #022A89 !important;
-            color: #ffffff !important;
-        }
-        .fc-button-primary:hover {
-            background-color: #011C5C !important; /* Azul mais escuro no hover */
-            border-color: #011C5C !important;
-        }
-        .fc-button-active {
-            background-color: #FFCC00 !important; /* Amarelo ouro para o botão ativo */
-            border-color: #FFCC00 !important;
-            color: #022A89 !important;
-        }
-        .fc-toolbar-title {
-            font-size: 1.8rem;
-            color: #022A89;
-            font-family: Arial, sans-serif;
-        }
     """,
     key=mode
 )
 
+
+# -------------------------------------------------------
+# DETALHES AO CLICAR
+# -------------------------------------------------------
+
+# 1. Primeiro, criamos a janela suspensa
+@st.dialog("Detalhes do Atendimento")
+def popup_detalhes(evento_dados):
+
+    # Visual interno
+    st.subheader(f"📌 {evento_dados.get('title', 'Sem Título')}")
+    st.write(f"📅 **Abertura:** {evento_dados.get('abertura')}")
+    st.write(f"🏁 **Fechamento:** {evento_dados.get('fechamento')}")
+    st.write(f"🏢 **Campus:** {evento_dados.get('campus')}")
+    st.write(f"👤 **Responsável:** {evento_dados.get('atendente')}")
+    st.write(f"💼 **Status:** {evento_dados.get('status')}")
+    st.write(f"📊 **Etapa Atual:** {evento_dados.get('etapa_atual')}")
+    st.write(f"🎓 **Tipo de Curso:** {evento_dados.get('tipo_curso')}")
+    st.write(f"👤 **Cliente:** {evento_dados.get('cliente')}")
+    st.write(f"🔢 **Código do Cliente:** {evento_dados.get('codigo_cliente')}")
+    st.write(f"👥 **Tipo de Cliente:** {evento_dados.get('tipo_cliente')}")
+    st.write(f"⭐ **Classificação:** {evento_dados.get('Classificação')}")
+
+
+# 2. O Bloco de Clique Único que dispara as DUAS funções
+if state.get('eventClick'):
+    evento_completo = state['eventClick']['event']
+    ext = evento_completo.get('extendedProps', {})
+    data_dia = ext.get('data_dia')
+
+    if data_dia:
+        # 1° Função: Criação do dicionário de dados para a janela flutuante
+        dados_para_janela = {
+            'title':     evento_completo.get('title'),
+            'abertura':   ext.get('abertura'),
+            'fechamento': ext.get('fechamento'),
+            'campus':    ext.get('campus'),
+            'atendente': ext.get('atendente'),
+            'status':    ext.get('status'),
+
+            'etapa_atual': ext.get('etapa_atual'),
+            'tipo_curso': ext.get('tipo_curso'),
+            'curso': ext.get('curso'),
+            'cliente': ext.get('cliente'),
+            'codigo_cliente': ext.get('codigo_cliente'),
+            'tipo_cliente': ext.get('tipo_cliente'),
+            'Classificação': ext.get('Classificação'),
+        }
+        # Abrimos a janela flutuante
+        popup_detalhes(dados_para_janela)
+
+
+        # 2° Função: Filtragem dos dados para exibir a tabela detalhada
+        df_dia = df_valido[df_valido['data_abertura'] == data_dia].copy()
+        data_formatada = pd.to_datetime(data_dia).strftime('%d/%m/%Y')
+
+        st.markdown(f"""
+            <div class="detail-card">
+                <div class="detail-card-header">
+                    📋 Solicitações de {data_formatada}
+                    <span class="badge">{len(df_dia)} registro(s)</span>
+                </div>
+                <div class="detail-card-body">
+        """, unsafe_allow_html=True)
+
+        st.dataframe(
+            df_dia[[
+                'Atendimento', 'Assunto', 'Status',
+                'CAMPUS', 'Atendente responsável',
+                'TIPO_ABERTURA', 'Abertura', 'Fechamento'
+            ]].rename(columns={
+                'Atendente responsável': 'Atendente',
+                'TIPO_ABERTURA':         'Tipo',
+            }).reset_index(drop=True),
+            use_container_width=True,
+            height=320,
+        )
+
+        st.markdown('</div></div>', unsafe_allow_html=True)
