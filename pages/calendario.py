@@ -1,6 +1,10 @@
 import pandas as pd
 import streamlit as st
+<<<<<<< Updated upstream
 
+=======
+import sqlite3
+>>>>>>> Stashed changes
 from streamlit_calendar import calendar
 from datetime import datetime
 st.set_page_config(page_title='Calendário Solicitações',
@@ -14,6 +18,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
+<<<<<<< Updated upstream
 # Mapeamento dos modos para os valores esperados pelo calendário
 modos_traduzidos = {
     "Visão Geral": "daygrid",
@@ -21,6 +26,63 @@ modos_traduzidos = {
     "Linha do Tempo": "timeline",
     "Lista de Demandas": "list",
     "Múltiplos Meses": "multimonth",
+=======
+# -------------------------------------------------------
+# CABEÇALHO
+# -------------------------------------------------------
+st.markdown("""
+    <div class="page-header">
+        <h1>📅 Calendário de Solicitações</h1>
+        <p>Universidade Católica de Brasília &nbsp;·&nbsp; Portal Atende</p>
+    </div>
+""", unsafe_allow_html=True)
+
+col_nav1, col_nav2, _ = st.columns([1, 1, 4])
+with col_nav1:
+    if st.button("👁️ Calendário Acadêmico", use_container_width=True):
+        st.switch_page("pages/visualizar.py")
+
+with col_nav2:
+    if st.button("📂 Upload de Arquivos ", use_container_width=True):
+        st.switch_page("pages/upload.py")
+
+# -------------------------------------------------------
+# CARREGAMENTO DOS DADOS
+# -------------------------------------------------------
+@st.cache_data
+def carregar_dados():
+    conn = sqlite3.connect("data/dados.db")
+    df = pd.read_sql("SELECT * FROM atendimentos", conn)
+    conn.close()
+    
+    for col in ['Abertura', 'Fechamento', 'Prazo limite final']:
+        df[col] =  pd.to_datetime(df[col],   dayfirst=True, errors='coerce')
+    
+    colunas_para_tratar = df.columns.difference(['Abertura', 'Fechamento', 'Prazo limite final'])
+    # Aplica o fillna('N/A') apenas no resultado dessa exclusão
+    df[colunas_para_tratar] = df[colunas_para_tratar].fillna('N/A')
+    return df
+
+df = carregar_dados()
+
+
+# -------------------------------------------------------
+# PALETA DE STATUS
+# Complementar ao azul marinho do site.
+# Todos passam contraste WCAG AA sobre branco.
+#
+#  Terracota  — Em andamento       (quente/ativo)
+#  Esmeralda  — Concluído confirm. (positivo/encerrado)
+#  Violeta    — Concluído a resp.  (pendência/aguarda)
+#  Ardósia    — Cancelado          (neutro/inativo)
+# -------------------------------------------------------
+cores_status = {
+    'Em andamento':          '#B84E1A',
+    'Concluído confirmado':  '#1A7055',
+    'Concluído a responder': '#513DA0',
+    'Cancelado':             '#52637E',
+    'Limite de prazo - 30 dias':         '#D32F2F',  # cor de alerta para prazos próximos ou vencidos
+>>>>>>> Stashed changes
 }
 modo_selecionado = st.selectbox(
     "Selecione o modo do calendário:",

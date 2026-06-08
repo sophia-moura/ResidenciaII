@@ -7,7 +7,7 @@ ENV/
 *.xlsx
 *.xls
 *.csv
-
+data/*.db
 # Ignorar arquivos temporários do Python
 __pycache__/
 *.pyc
