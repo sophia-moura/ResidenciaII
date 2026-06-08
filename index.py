@@ -30,6 +30,7 @@ st.markdown("""
         }
             
         div[data-testid="stPageLink"] a {
+            margin-top: 20px !important;
             padding: 10px 30px;
             background-color: #FFFFFF;
             color: #022A89;

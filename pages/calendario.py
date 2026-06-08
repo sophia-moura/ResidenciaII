@@ -146,6 +146,14 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
+col_nav1, col_nav2, _ = st.columns([1, 1, 4])
+with col_nav1:
+    if st.button("👁️ Ver Calendário Acadêmico", use_container_width=True):
+        st.switch_page("pages/visualizar.py")
+
+with col_nav2:
+    if st.button("📂 Upload de Arquivos", use_container_width=True):
+        st.switch_page("pages/upload.py")
 
 # -------------------------------------------------------
 # CARREGAMENTO DOS DADOS
